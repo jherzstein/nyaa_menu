@@ -1,0 +1,13 @@
+#+Options: toc:nil
+
+* nyaa_menu: A minimal tool for those too lazy to browse anime/manga torrents
+A dmenu search and select tool for anime and manga torrents on nyaa.si to either copy the magnet link or start downloading the torrent. Inspired by Bugswriter's [[https://github.com/Bugswriter/notflix#notflix][notflix]]. 
+** How does it work?
+This shell script scrapes nyaa.si to list the names and corresponding magnet links with ~dmenu~ of either anime or manga based on user-defined flags. If the user chooses, they can send the magnet link to either a local or remote transmission server.
+** Dependencies
+- curl - for scraping data from nyaa.si
+- [[https://tools.suckless.org/dmenu/][dmenu]] - a dynamic menu for X, used to list and select torrents.
+- xclip - copies magnet link to the clipboard
+- transmission-daemon
+- transmission-remote
+
