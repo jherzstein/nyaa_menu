@@ -1,0 +1,49 @@
+#!/bin/sh
+transmission_remote='false'
+while getopts 'madr:' OPTION; do
+  case "$OPTION" in
+    m)	    
+      echo "Search manga english translated."
+      search='3_1'
+      ;;
+    a)
+      echo "Search anime english translated."
+      search='1_2'
+      ;;
+    d)
+      echo "Media is listed by most seeded in descending order."
+      order='s=seeders&o=desc'
+      ;;
+    r)
+      echo "Torrent will be sent to transmission-remote server."
+      transmission_remote='true'
+      ;;
+    ?)
+      echo "Search all categories english translated."
+      search='0_0'
+      order=''
+      ;;
+  esac
+done
+shift "$(($OPTIND -1))"
+query=$(printf '%s' "$*" | tr ' ' '+' )
+url="https://nyaa.si/?f=0&c=$search&q=$query&$order"
+echo "Scraping from $url"
+entries='20'
+media=$(curl -s $url | grep -Eo 'view\/[0-9]{7}" title=".*"' | head -n $entries | tr -d '"' | cut -b 20-) 
+magnet=$(curl -s $url | grep -Po "magnet:\?xt=urn:btih:[a-zA-Z0-9]*" | head -n $entries)
+read select <<< $(printf "%s\n" "$media" "$magnet" | pr -2 -Ts, | dmenu -l $entries)
+selected_magnet=$(echo "$select" | grep -Po "magnet:\?xt=urn:btih:[a-zA-Z0-9]*")
+echo -n "$selected_magnet" | xclip -selection clipboard
+selected_media=$(echo "$select" | cut -d, -f1 )
+
+if [ "$transmission_remote" = 'true' ] ; then
+	read -r -p "Specify url and port for remote transmission server: " transmission_url
+	read -r -p "Specify transmission username (if any): " username 
+	read -r -p -s "Specify transmission password (if any): " password
+	transmission-remote $transmission_url --auth=$username:$password -a "$selected_magnet"
+else
+	echo "Copied magnet link for '$selected_media' to clipboard"
+fi
+# aria2c -d ~/Downloads/ --enable-dht=true --async-dns=false --seed-time=0 "$selected_magnet"
+# transmission-cli $selected_magnet
